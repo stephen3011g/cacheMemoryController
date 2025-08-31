@@ -44,8 +44,6 @@ module tb();
 
     ui_in = 8'b00001000; // Read (0) from address 0x08 (miss case)
     #40;
-
-    $finish;
   end
 
   initial begin
