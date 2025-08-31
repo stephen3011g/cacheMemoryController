@@ -27,7 +27,7 @@ module tb ();
 `endif
 
   // Instantiate your top-level module here
-  tt_cache_controller user_project (
+  tt_um_cache_controller user_project (
     // Include power ports for Gate Level simulation if enabled
 `ifdef GL_TEST
     .VPWR(VPWR),
