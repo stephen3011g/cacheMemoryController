@@ -59,6 +59,10 @@ module tt_um_cache_controller(
     input  [7:0]  uio_in,
     output [7:0]  uio_out,
     output [7:0]  uio_oe
+`ifdef GL_TEST
+    ,input  VPWR,
+    input  VGND
+`endif
 );
 
     wire        cpu_rw   = ui_in[7];
@@ -81,8 +85,8 @@ module tt_um_cache_controller(
     );
 
     assign uo_out = cpu_dout[7:0];
-    
-    // Tie off unused bidir pins safely
+
+    // Tie off unused bidirectional pins
     assign uio_out = 8'b0;
     assign uio_oe = 8'b0;
     wire [7:0] unused_uio_in = uio_in; // to avoid warnings
