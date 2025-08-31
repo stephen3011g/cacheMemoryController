@@ -10,24 +10,34 @@ async def test_cache(dut):
     clock = Clock(dut.clk, 10, units="us")  # 100 KHz clock
     cocotb.start_soon(clock.start())
 
-    # Reset sequence
+    # Reset the DUT
     dut.rst_n.value = 0
     dut.ui_in.value = 0
-    # Remove this if uio_in port is not in design, else keep and set 0
-    # dut.uio_in.value = 0  
     await ClockCycles(dut.clk, 10)
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 1)
 
-    # Write operation - MSB=1 (write), address=0x04
-    dut.ui_in.value = 0b10000100  
-    await ClockCycles(dut.clk, 1)
+    # Write operation: MSB=1 (write), address=0x04
+    dut.ui_in.value = 0b10000100  # write flag + address 0x04
+    await ClockCycles(dut.clk, 2)  # wait longer to ensure write takes effect
 
-    # Read operation - MSB=0 (read), address=0x04
-    dut.ui_in.value = 0b00000100
-    await ClockCycles(dut.clk, 1)
+    # Read operation: MSB=0 (read), address=0x04
+    dut.ui_in.value = 0b00000100   # read flag + address 0x04
+    await ClockCycles(dut.clk, 2)
 
-    # Check result is lower 8 bits of fixed write data 0xCAFEBABE, i.e. 0xBE
+    # Check the output matches lower 8 bits of 0xCAFEBABE (0xBE)
     expected = 0xBE
-    dut._log.info(f"uo_out={int(dut.uo_out.value)} expected={expected}")
-    assert dut.uo_out.value == expected, f"Cache read mismatch: got {int(dut.uo_out.value)}, expected {expected}"
+    actual = int(dut.uo_out.value)
+    dut._log.info(f"Read uo_out={actual} expected={expected}")
+
+    assert actual == expected, f"Cache read mismatch: got {actual}, expected {expected}"
+
+    # Additional optional test: Read from address 0x08 (miss) returns 0xEF (from DEADBEEF)
+    dut.ui_in.value = 0b00001000   # read flag + address 0x08
+    await ClockCycles(dut.clk, 2)
+
+    miss_expected = 0xEF
+    miss_actual = int(dut.uo_out.value)
+    dut._log.info(f"Miss read uo_out={miss_actual} expected={miss_expected}")
+
+    assert miss_actual == miss_expected, f"Cache miss read mismatch: got {miss_actual}, expected {miss_expected}"
