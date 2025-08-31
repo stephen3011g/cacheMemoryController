@@ -8,7 +8,9 @@ module tb();
   reg ena;
   reg [7:0] ui_in;
   wire [7:0] uo_out;
-  wire [7:0] uio;
+  reg [7:0] uio_in;
+  wire [7:0] uio_out;
+  wire [7:0] uio_oe;
 
   initial begin
     $dumpfile("tb.vcd");
@@ -24,26 +26,26 @@ module tb();
       .ena(ena),
       .ui_in(ui_in),
       .uo_out(uo_out),
-      .uio(uio)
+      .uio_in(uio_in),
+      .uio_out(uio_out),
+      .uio_oe(uio_oe)
   );
 
   initial begin
-    rst_n = 0;
-    ena = 0;
-    ui_in = 8'b0;
+    rst_n = 0; ena = 0; ui_in = 0; uio_in = 0;
     #20;
-    rst_n = 1;
-    ena = 1;
+    rst_n = 1; ena = 1;
     #10;
 
-    ui_in = 8'b10000100; // Write (1) to address 0x04
+    ui_in = 8'b10000100; // Write flag and address 0x04
     #40;
 
-    ui_in = 8'b00000100; // Read (0) from address 0x04 (same as write)
+    ui_in = 8'b00000100; // Read from address 0x04
     #40;
 
-    ui_in = 8'b00001000; // Read (0) from address 0x08 (miss case)
+    ui_in = 8'b00001000; // Read from address 0x08 (miss)
     #40;
+
   end
 
   initial begin
