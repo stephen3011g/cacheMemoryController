@@ -61,7 +61,7 @@ endmodule
 
 
 // Top-level module adapted for SkyWater Tiny Tapeout pins
-module tt_cache_controller(
+module tt_um_cache_controller(
     input         clk,
     input         rst_n,
     input  [7:0]  ui_in,    // 8 digital inputs
