@@ -7,10 +7,14 @@ module tb();
   reg rst_n;
   reg ena;
   reg [7:0] ui_in;
-  wire [7:0] uo_out;
   reg [7:0] uio_in;
+  wire [7:0] uo_out;
   wire [7:0] uio_out;
   wire [7:0] uio_oe;
+`ifdef GL_TEST
+  wire VPWR = 1'b1;
+  wire VGND = 1'b0;
+`endif
 
   initial begin
     $dumpfile("tb.vcd");
@@ -29,6 +33,10 @@ module tb();
       .uio_in(uio_in),
       .uio_out(uio_out),
       .uio_oe(uio_oe)
+`ifdef GL_TEST
+      ,.VPWR(VPWR)
+      ,.VGND(VGND)
+`endif
   );
 
   initial begin
@@ -37,15 +45,16 @@ module tb();
     rst_n = 1; ena = 1;
     #10;
 
-    ui_in = 8'b10000100; // Write flag and address 0x04
+    ui_in = 8'b10000100; // Write (MSB=1) to addr 0x04
     #40;
 
-    ui_in = 8'b00000100; // Read from address 0x04
+    ui_in = 8'b00000100; // Read (MSB=0) from addr 0x04
     #40;
 
-    ui_in = 8'b00001000; // Read from address 0x08 (miss)
+    ui_in = 8'b00001000; // Read miss from addr 0x08
     #40;
 
+    $finish;
   end
 
   initial begin
