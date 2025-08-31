@@ -1,11 +1,9 @@
 `default_nettype none
 `timescale 1ns / 1ps
-/* This testbench instantiates the top-level module 'tt_um_yourname_simplecache' and sets up signals
-   for simulation with convenience signals for cocotb or other simulators.
-*/
 
 module tb ();
-  // Dump the signals to a VCD file. You can view it with gtkwave or similar.
+
+  // Dump signals for waveform viewing
   initial begin
     $dumpfile("tb.vcd");
     $dumpvars(0, tb);
@@ -13,34 +11,52 @@ module tb ();
   end
 
   // Testbench signals
-  reg clk;
-  reg rst_n;
-  reg ena;
-  reg [7:0] ui_in;
-  reg [7:0] uio_in;
+  reg        clk;
+  reg        rst_n;
+  reg  [7:0] ui_in;
   wire [7:0] uo_out;
-  wire [7:0] uio_out;
-  wire [7:0] uio_oe;
-`ifdef GL_TEST
-  wire VPWR = 1'b1;
-  wire VGND = 1'b0;
-`endif
+  wire [7:0] uio;
 
-  // Instantiate your top-level module here
-  tt_um_cache_controller user_project (
-    // Include power ports for Gate Level simulation if enabled
-`ifdef GL_TEST
-    .VPWR(VPWR),
-    .VGND(VGND),
-`endif
-    .ui_in  (ui_in),    // 8-bit input bus
-    .uo_out (uo_out),   // 8-bit output bus
-    .uio_in (uio_in),   // 8-bit bidir input
-    .uio_out(uio_out),  // 8-bit bidir output
-    .uio_oe (uio_oe),   // 8-bit bidir enable
-    .ena    (ena),      // enable input
-    .clk    (clk),      // clock input
-    .rst_n  (rst_n)     // active low reset
+  // Clock generation: 10ns period
+  initial clk = 0;
+  always #5 clk = ~clk;
+
+  // Instantiate your top-level module
+  tt_um_cache_controller dut (
+    .clk(clk),
+    .rst_n(rst_n),
+    .ui_in(ui_in),
+    .uo_out(uo_out),
+    .uio(uio)
   );
+
+  initial begin
+    // Initialize inputs
+    rst_n = 0;
+    ui_in = 8'b0;
+    #20;
+    rst_n = 1;
+
+    // Test writing to address 0x04 with MSB=1 (write)
+    ui_in = 8'b10000100; // Write flag (MSB=1) + address 0x04
+    #10;
+
+    // Test reading from address 0x04 with MSB=0 (read)
+    ui_in = 8'b00000100; // Read flag (MSB=0) + address 0x04
+    #10;
+
+    // Test reading from address 0x08 (miss)
+    ui_in = 8'b00001000; // Read address 0x08
+    #10;
+
+    #20;
+    $finish;
+  end
+
+  // Optional: monitor signals
+  initial begin
+    $monitor("Time=%0t clk=%b rst_n=%b ui_in=%b uo_out=%h uio=%h", 
+              $time, clk, rst_n, ui_in, uo_out, uio);
+  end
 
 endmodule
