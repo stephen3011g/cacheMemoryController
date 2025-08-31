@@ -1,7 +1,7 @@
 module simple_cache_controller(
     input         clk,
     input         rst_n,
-    input  [6:0]  cpu_addr,      // 7-bit CPU address (exclude MSB read/write bit)
+    input  [6:0]  cpu_addr,
     input  [31:0] cpu_din,
     output reg [31:0] cpu_dout,
     input         cpu_rw,
@@ -21,14 +21,10 @@ module simple_cache_controller(
         if (!rst_n) begin
             cpu_dout    <= 0;
             cache_ready <= 1;
-            valid_mem[0] <= 0; valid_mem[1] <= 0;
-            valid_mem[2] <= 0; valid_mem[3] <= 0;
-            dirty_mem[0] <= 0; dirty_mem[1] <= 0;
-            dirty_mem[2] <= 0; dirty_mem[3] <= 0;
-            tag_mem[0]   <= 0; tag_mem[1]   <= 0;
-            tag_mem[2]   <= 0; tag_mem[3]   <= 0;
-            data_mem[0]  <= 0; data_mem[1]  <= 0;
-            data_mem[2]  <= 0; data_mem[3]  <= 0;
+            valid_mem[0] <= 0; valid_mem[1] <= 0; valid_mem[2] <= 0; valid_mem[3] <= 0;
+            dirty_mem[0] <= 0; dirty_mem[1] <= 0; dirty_mem[2] <= 0; dirty_mem[3] <= 0;
+            tag_mem[0]   <= 0; tag_mem[1]   <= 0; tag_mem[2]   <= 0; tag_mem[3]   <= 0;
+            data_mem[0]  <= 0; data_mem[1]  <= 0; data_mem[2]  <= 0; data_mem[3]  <= 0;
         end else if (cpu_valid && cache_ready) begin
             if (valid_mem[index] && tag_mem[index] == tag) begin
                 if (cpu_rw) begin
@@ -58,9 +54,11 @@ module tt_um_cache_controller(
     input         clk,
     input         rst_n,
     input         ena,
-    input  [7:0]  ui_in,    // 8-bit input: [7] = read/write, [6:0] = address
+    input  [7:0]  ui_in,
     output [7:0]  uo_out,
-    inout  [7:0]  uio
+    input  [7:0]  uio_in,
+    output [7:0]  uio_out,
+    output [7:0]  uio_oe
 );
 
     wire        cpu_rw   = ui_in[7];
@@ -83,7 +81,11 @@ module tt_um_cache_controller(
     );
 
     assign uo_out = cpu_dout[7:0];
-    wire [7:0] unused_uio = uio; // Unused bidirectional pins
+    
+    // Tie off unused bidir pins safely
+    assign uio_out = 8'b0;
+    assign uio_oe = 8'b0;
+    wire [7:0] unused_uio_in = uio_in; // to avoid warnings
 
 endmodule
 
