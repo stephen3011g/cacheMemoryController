@@ -10,25 +10,24 @@ async def test_cache(dut):
     clock = Clock(dut.clk, 10, units="us")  # 100 KHz clock
     cocotb.start_soon(clock.start())
 
-    # Reset
+    # Reset sequence
     dut.rst_n.value = 0
-    dut.ena.value = 1
     dut.ui_in.value = 0
-    dut.uio_in.value = 0
+    # Remove this if uio_in port is not in design, else keep and set 0
+    # dut.uio_in.value = 0  
     await ClockCycles(dut.clk, 10)
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 1)
 
     # Write operation - MSB=1 (write), address=0x04
-    dut.ui_in.value = 0b10000100  # write flag + address 0x04
-    dut.uio_in.value = 0          # not used
+    dut.ui_in.value = 0b10000100  
     await ClockCycles(dut.clk, 1)
 
     # Read operation - MSB=0 (read), address=0x04
     dut.ui_in.value = 0b00000100
     await ClockCycles(dut.clk, 1)
 
-    # Expect output to be 0xBE (lower 8 bits of dummy data 0xCAFEBABE used in cpu_din)
+    # Check result is lower 8 bits of fixed write data 0xCAFEBABE, i.e. 0xBE
     expected = 0xBE
     dut._log.info(f"uo_out={int(dut.uo_out.value)} expected={expected}")
     assert dut.uo_out.value == expected, f"Cache read mismatch: got {int(dut.uo_out.value)}, expected {expected}"
