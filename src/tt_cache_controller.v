@@ -1,7 +1,7 @@
 module simple_cache_controller(
     input         clk,
     input         rst_n,
-    input  [7:0]  cpu_addr,
+    input  [6:0]  cpu_addr,      // 7-bit CPU address (exclude MSB read/write bit)
     input  [31:0] cpu_din,
     output reg [31:0] cpu_dout,
     input         cpu_rw,
@@ -15,7 +15,7 @@ module simple_cache_controller(
     reg        dirty_mem[3:0];
 
     wire [1:0] index = cpu_addr[3:2];
-    wire [5:0] tag   = cpu_addr[7:2];
+    wire [5:0] tag   = cpu_addr[6:2];
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -58,14 +58,14 @@ module tt_um_cache_controller(
     input         clk,
     input         rst_n,
     input         ena,
-    input  [7:0]  ui_in,
+    input  [7:0]  ui_in,    // 8-bit input: [7] = read/write, [6:0] = address
     output [7:0]  uo_out,
     inout  [7:0]  uio
 );
 
-    wire [7:0] cpu_addr = ui_in;
-    wire       cpu_rw   = ui_in[7];    
-    wire       cpu_valid = ena;         // Use ena as valid enable for CPU requests
+    wire        cpu_rw   = ui_in[7];
+    wire [6:0]  cpu_addr = ui_in[6:0];
+    wire        cpu_valid = ena;
 
     wire [31:0] cpu_din = 32'hCAFEBABE;
     wire [31:0] cpu_dout;
@@ -83,8 +83,7 @@ module tt_um_cache_controller(
     );
 
     assign uo_out = cpu_dout[7:0];
-    wire [7:0] unused_uio;
-    assign unused_uio = uio;
+    wire [7:0] unused_uio = uio; // Unused bidirectional pins
 
 endmodule
 
