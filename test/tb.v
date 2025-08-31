@@ -54,7 +54,6 @@ module tb();
     ui_in = 8'b00001000; // Read miss from addr 0x08
     #40;
 
-    $finish;
   end
 
   initial begin
